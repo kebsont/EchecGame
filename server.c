@@ -31,7 +31,7 @@ int main(){
 
   /*---- Listen on the socket, with 5 max connection requests queued ----*/
   if(listen(welcomeSocket,5)==0)
-    printf("En Ecoute sur %s ...\n", serverAddr);
+    printf("En Ecoute ...\n");
   else
     printf("Erreur\n");
 
@@ -39,10 +39,12 @@ int main(){
 
    ---- Accept call creates a new socket for the incoming connection ----*/
   addr_size = sizeof serverStorage;
-  newSocket = accept(welcomeSocket, (struct sockaddr *) &serverStorage, &addr_size);
+  while (1) {
+    newSocket = accept(welcomeSocket, (struct sockaddr *) &serverStorage, &addr_size);
+  }
 
   /*---- Send message to the socket of the incoming connection ----*/
-  strcpy(buffer,"Hello World\n");
+  strcpy(buffer,"Deplacer Roi\n");
   send(newSocket,buffer,13,0);
   /*---- Print the sent message ----*/
   printf("Data sent: %s",buffer);

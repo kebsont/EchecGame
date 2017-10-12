@@ -1,4 +1,4 @@
-/****************** CLIENT CODE ****************/
+/****************** CLIENT ****************/
 
 #include <stdio.h>
 #include <sys/socket.h>
@@ -11,29 +11,29 @@ int main(){
   struct sockaddr_in serverAddr;
   socklen_t addr_size;
 
-  /*---- Create the socket. The three arguments are: ----*/
-  /* 1) Internet domain 2) Stream socket 3) Default protocol (TCP in this case) */
+  /*---- Creer le socket, les 3 arguments sont: ----*/
+  /* 1) Internet domain 2) Stream socket 3) Default protocol (TCP dans ce cas) */
   clientSocket = socket(PF_INET, SOCK_STREAM, 0);
 
-  /*---- Configure settings of the server address struct ----*/
+  /*---- Configurer les parametres de la structure d'adressedu serveur ----*/
   /* Address family = Internet */
   serverAddr.sin_family = AF_INET;
-  /* Set port number, using htons function to use proper byte order */
+  /* Definir le numero de port, en utilisant htons pour utiliser proprement byte order */
   serverAddr.sin_port = htons(7891);
-  /* Set IP address to localhost */
+  /* Definir l'@ IP à localhost */
   serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-  /* Set all bits of the padding field to 0 */
+  /* Tous les bits du padding à 0 */
   memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
 
-  /*---- Connect the socket to the server using the address struct ----*/
+  /*---- Connecter le socket au server en utilisant la structure d'adresse ----*/
   addr_size = sizeof serverAddr;
   connect(clientSocket, (struct sockaddr *) &serverAddr, addr_size);
 
-  /*---- Read the message from the server into the buffer ----*/
+  /*---- Lire le msg provenant du serveur dans le buffer ----*/
   recv(clientSocket, buffer, 1024, 0);
 
-  /*---- Print the received message ----*/
-  printf("Data received: %s",buffer);
+  /*---- Afficher le message reçu ----*/
+  printf("Data received: %s\n",buffer);
 
   return 0;
 }
