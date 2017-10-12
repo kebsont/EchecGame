@@ -1,17 +1,16 @@
 #include "chesslib.h"
 
 
-/********************************************
- *prototypes for functions used only in here*
- ********************************************/
-/*checks if the king is threatened by an enemy piece, returns true if he is*/
+//prototypes pour les fonctions utilises ici
+
+//Verifier si le Roi est menace par un epiece ennemie, returns true si c'est vrai*/
 static bool king_is_threatened(const int, const int, const int, const int, const char, const int, ch_template[][8]);
 
-/*remove king's life if a piece can move to the domain surrounding him*/
+/*retirer king's life si une piece peut se deplacer autour de lui*/
 static bool k_domain_ctrl(const int, const int, const int, const int, const int, const char);
 
-/*checks whether a king is captured in the next move, thus ending the game
- *or if he is about to be captured by moving to a certain square*/
+/*vérifie si un roi est capturé dans le prochain coup, mettant ainsi fin au jeu
+  ou s'il est sur le point d'être capturé en se déplaçant sur un certain carré */
 static void check_mate(KingState**, KingState**);
 
 /*is called twice in findKState with the coords of each King and stores
