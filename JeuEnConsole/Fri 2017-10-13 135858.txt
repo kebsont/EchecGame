@@ -1,0 +1,6 @@
+Round  #1:	White moves Pawn from A2 to A3
+           	Black moves Pawn from A7 to A6
+Round  #2:	White moves Pawn from A3 to A4
+           	Black moves Pawn from A6 to A5
+Round  #3:	White moves Pawn from H2 to H4
+           	Black moves Pawn from B7 to B5

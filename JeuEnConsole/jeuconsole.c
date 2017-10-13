@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 				playerInput = getPlayerInput();
 			}
 
-			if (!playerInput) {	/*avoid segfaulting for strlen(NULL) later*/
+			if (!playerInput) {	/*eviter segfaulting pour strlen(NULL) plus tard*/
 				loop_count++;
 				continue;
 			}
