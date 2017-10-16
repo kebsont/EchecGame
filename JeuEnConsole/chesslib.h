@@ -85,9 +85,9 @@ n'est pas en échec mais n'est pas non plus autorisé à se déplacer vers certa
 
 /*
 les mouvements possibles que chaque roi peut faire après une situation de contrôle
- * par exemple WKingMoves= "A8 H4 B3"*/
-extern char *WKingMoves;
-extern char *BKingMoves;
+ * par exemple DeplacementWKing= "A8 H4 B3"*/
+extern char *DeplacementWKing;
+extern char *DeplacementBKing;
 
 /*si un joueur a choisi de faire du roque et du roque est possible
  * pour ce tour, la valeur de ce booléen devient vraie*/
@@ -96,8 +96,8 @@ extern CastlingBool check_castling;
 
 
 /******************************************
- *prototypes function pour la librarie main *
- ******************************************/
+ *prototypes function pour la librarie main */
+
 
 /*remplit un Échiquier[8][8], Échiquier avec des pièces d'échecs, récursivement
  * appelez initiaiiserEchiquier () si on a juste besoin de remplir un échiquier standard; ne pas
@@ -136,13 +136,13 @@ bool piecesOverlap (templateEchiquier chb[][8], const int sx, const int sy, cons
 /*dans le cas où le domaine d'un roi est menacé de quelque façon (check ou safe_check) cette fonction
  * vérifie si le prochain coup entré enlève le Roi d'une situation menaçante;
  * les arguments sont les mêmes que movePiece */
-bool isCheckMoveValid(templateEchiquier chb[][8], char *plInput, char piece[2], int color);
+bool verifiValideDeplacement(templateEchiquier chb[][8], char *plInput, char piece[2], int color);
 
 /*vérifier la validité de l'entrée du joueur; renvoie false pour la mauvaise entrée et true sinon
  * input: tampon d'entrée entré par le joueur; vérifiez si la chaîne est NULL avant
  * en utilisant cette fonction
  * errPtr: référence au code d'erreur entier dans la fonction principale*/
-bool validInput (const char *input, int *errPtr);
+bool entreeValide (const char *input, int *errPtr);
 
 /*créer un string avec la date actuelle à utiliser comme nom de fichier du fichier journal*/
 void date_filename (char*, int);
@@ -180,4 +180,4 @@ inline void clear_screen(void);
 inline void clear_buffer(void);
 inline void printMignon(const char*);
 inline void printInstructions(void);
-char *AImove(templateEchiquier chb[][8]);
+char *DeplacementOrdinateur(templateEchiquier chb[][8]);

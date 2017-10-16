@@ -54,30 +54,30 @@ int main(int argc, char *argv[])
 				goto ENDGAME;
 			}
 			if (roi_blanc == check || roi_blanc == safe_check) {
-				if (!WKingMoves)
+				if (!DeplacementWKing)
 					printf("Roi blanc ne peut pas se deplacer.\n");
 				else {
 					if (roi_blanc == check)
 						printf("Roi blanc est en danger\n");
 #ifndef NDEBUG
-					printf("Deplacements possibles pour le Roi Blanc: %s\n", WKingMoves);
+					printf("Deplacements possibles pour le Roi Blanc: %s\n", DeplacementWKing);
 #endif
 				}
 			}
 			if (roi_noir == check || roi_noir == safe_check) {
-				if (!BKingMoves)
+				if (!DeplacementBKing)
 					printf("Roi noir peut pas se deplacer.\n");
 				else {
 					if (roi_noir == check)
 						printf("Roi blanc est en danger!\n");
 #ifndef NDEBUG
-					printf("Deplacements possibles pour le Roi Blanc: %s\n", BKingMoves);
+					printf("Deplacements possibles pour le Roi Blanc: %s\n", DeplacementBKing);
 #endif
 				}
 			}
 			if (round == BLACK) {
 				if (AI_IS_ENABLED) {
-					memcpy(playerInput, AImove(echiquier), 4);
+					memcpy(playerInput, DeplacementOrdinateur(echiquier), 4);
 #ifndef NDEBUG
 					printf("%s ", playerInput);
 #endif
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 				goto LOOP;
 			}
 			compteur_boucle++;
-		} while (validInput(playerInput, &p_err) == false);
+		} while (entreeValide(playerInput, &p_err) == false);
 		playerInput[0] = (char)toupper(playerInput[0]);
 		playerInput[1] = (char)toupper(playerInput[1]);
 
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
 
 		if (roi_blanc == check  || roi_noir == check ||
 			(playerInput[0] == 'K' && (roi_blanc == safe_check || roi_noir == safe_check))) {
-			if (!isCheckMoveValid(echiquier, playerInput, piece_a_deplacer, round)) {
+			if (!verifiValideDeplacement(echiquier, playerInput, piece_a_deplacer, round)) {
 				p_err = 3;
 				goto LOOP;
 			}

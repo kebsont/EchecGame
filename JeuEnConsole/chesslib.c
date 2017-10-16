@@ -20,11 +20,16 @@ void get_king_moves(templateEchiquier [][8], int, int, int);
 
 
 /* la vie de chaque roi est mesurée dans son domaine libre
- * Note: voir comment les valeurs de ces variables sont modifiées tout au long de
+ * Note: voir
+ AIlist = addMove(AIlist, tmp);comment les valeurs de ces variables sont modifiées tout au long de
  * le jeu à comprendre; un bon débogueur aidera avec cela
  * 0 si le Roi peut se déplacer sur cette case
  * 1 si une attaque est imminente sur cette case
- * 2 si un carré adjacent a une position amicale
+ * 2 si un carré adjacent a
+}
+if (chb[i-1][j+1].occ == true && chb[i-1][j+1].c != BLACK) {
+	tmp[1] = j+1 + 'A';
+	AIlist = addMove(AIlist, tmp);une position amicale
  * 3 pour les carrés qui ne sont pas visibles lorsque le roi est sur les bords */
 static short WKingLife[3][3]; /*energy of white King*/
 static short BKingLife[3][3]; /*energy of black King*/
@@ -32,8 +37,8 @@ static short BKingLife[3][3]; /*energy of black King*/
 
 /* si l'état d'un roi est check ou sauve_check ces chaînes stockent les mouvements possibles du Roi
  * peut faire des paires de caractères; par exemple "A8 H4 P3", "F2 B0", etc.) */
-char *WKingMoves = NULL;
-char *BKingMoves = NULL;
+char *DeplacementWKing = NULL;
+char *DeplacementBKing = NULL;
 
 CastlingBool check_castling = ALL_CASTL_TRUE;
 
@@ -251,7 +256,7 @@ void printBoard(templateEchiquier chb[][8], const char p)
 #endif
 }
 
-bool validInput(const char *input, int *errPtr)
+bool entreeValide(const char *input, int *errPtr)
 {
 	if (strlen(input) > 3) {
 		return false;
@@ -649,7 +654,7 @@ void setCastling(templateEchiquier chb[][8], char *plInput, int color)
 	/*cstl_is_enabled = false;*/
 }
 
-bool isCheckMoveValid(templateEchiquier chb[][8], char *plInput, char piece[2], int color)
+bool verifiValideDeplacement(templateEchiquier chb[][8], char *plInput, char piece[2], int color)
 {
 	templateEchiquier nxt_chb[8][8];
 	EtatDuRoi nxtWK = safe, nxtBK = safe;
@@ -1150,23 +1155,23 @@ void get_king_moves(templateEchiquier chb[][8], int Kx, int Ky, int color)
 	int i, j, str_index = 0, tempx, tempy;
 
 	if (color == BLACK)
-		BKingMoves = malloc(22);
+		DeplacementBKing = malloc(22);
 	else
-		WKingMoves = malloc(22);
+		DeplacementWKing = malloc(22);
 	for (i = 0; i < 3; i++) {
 		for (j = 0; j < 3; j++) {
 			tempx = KD[i][j].x;
 			tempy = KD[i][j].y;
 			if (color == BLACK) {
 				if (BKingLife[i][j] == 0) {
-					sprintf(&BKingMoves[str_index], "%c%c ",
+					sprintf(&DeplacementBKing[str_index], "%c%c ",
 						chb[tempx][tempy].square[0],
 						chb[tempx][tempy].square[1]);
 					str_index+=3;
 				}
 			} else {
 				if (WKingLife[i][j] == 0) {
-					sprintf(&WKingMoves[str_index], "%c%c ",
+					sprintf(&DeplacementWKing[str_index], "%c%c ",
 						chb[tempx][tempy].square[0],
 						chb[tempx][tempy].square[1]);
 					str_index+=3;
@@ -1175,16 +1180,16 @@ void get_king_moves(templateEchiquier chb[][8], int Kx, int Ky, int color)
 		}
 	}
 	if (color == BLACK && !str_index) {
-		free(BKingMoves);
-		BKingMoves = NULL;
-		/*Weird stuff: Game segfaults if BKingMoves and WKingMoves aren't set
+		free(DeplacementBKing);
+		DeplacementBKing = NULL;
+		/*Weird stuff: Game segfaults if DeplacementBKing and DeplacementWKing aren't set
 		 *to NULL immediately after freeing; I reproduced the same situation
 		 *in a small test program and it worked just by freeing the strings
 		 *(without setting to NULL). Again if you have an explanation contact me.*/
 	}
 	if (color == WHITE && !str_index) {
-		free(WKingMoves);
-		WKingMoves = NULL;
+		free(DeplacementWKing);
+		DeplacementWKing = NULL;
 	}
 }
 

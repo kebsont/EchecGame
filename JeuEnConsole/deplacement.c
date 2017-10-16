@@ -218,16 +218,16 @@ char *getRandMove(PMoveNode *head)
 	return d;
 }
 
-char *AImove(templateEchiquier chb[][8])
+char *DeplacementOrdinateur(templateEchiquier chb[][8])
 {
 	PMoveNode *AIl = NULL;
-	char *retvalue = malloc(4), *temp = malloc(4);
+	char *valeurDeRetour = malloc(4), *temp = malloc(4);
 
 	total_moves = 0;
 	AIl = getMoves(AIl, chb);
 	memcpy(temp, getRandMove(AIl), 4);
-	strcpy(retvalue,temp);
+	strcpy(valeurDeRetour,temp);
 	free(temp);
 	freeList(AIl);
-	return retvalue;
+	return valeurDeRetour;
 }
