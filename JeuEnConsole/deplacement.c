@@ -46,7 +46,7 @@ void freeList(PMoveNode *head)
 	}
 }
 
-PMoveNode *getMoves(PMoveNode *AIlist, ch_template chb[][8])
+PMoveNode *getMoves(PMoveNode *AIlist, templateEchiquier chb[][8])
 {
 	int i, j, k, l;
 	char tmp[4];
@@ -218,7 +218,7 @@ char *getRandMove(PMoveNode *head)
 	return d;
 }
 
-char *AImove(ch_template chb[][8])
+char *AImove(templateEchiquier chb[][8])
 {
 	PMoveNode *AIl = NULL;
 	char *retvalue = malloc(4), *temp = malloc(4);

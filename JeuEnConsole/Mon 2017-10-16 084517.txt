@@ -1,0 +1,2 @@
+Round  #1:	White moves Pawn from D2 to D3
+           	Black moves Pawn from B7 to B6

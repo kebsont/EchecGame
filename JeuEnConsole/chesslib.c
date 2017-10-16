@@ -4,37 +4,41 @@
 //prototypes pour les fonctions utilises ici
 
 //Verifier si le Roi est menace par un epiece ennemie, returns true si c'est vrai*/
-static bool king_is_threatened(const int, const int, const int, const int, const char, const int, ch_template[][8]);
+static bool king_is_threatened(const int, const int, const int, const int, const char, const int, templateEchiquier[][8]);
 
 /*retirer king's life si une piece peut se deplacer autour de lui*/
 static bool k_domain_ctrl(const int, const int, const int, const int, const int, const char);
 
 /*vérifie si un roi est capturé dans le prochain coup, mettant ainsi fin au jeu
   ou s'il est sur le point d'être capturé en se déplaçant sur un certain carré */
-static void check_mate(KingState**, KingState**);
+static void check_mate(EtatDuRoi**, EtatDuRoi**);
 
-/*is called twice in findKState with the coords of each King and stores
- *the possible moves a King can do, during check*/
-void get_king_moves(ch_template [][8], int, int, int);
 
-/*the life of each King is measured in his free domain
- *Note: see how the values of these variables are changed throughout
- *the game to understand; a good debugger will help with that
- * 0 if the King can move to that square
- * 1 if an attack is imminent on that square
- * 2 if an adjacent square has a friendly sitting on it
- * 3 for the squares that aren't visible when the king is on the edges*/
+/* est appelé deux fois dans findKState avec les coordonnées de chaque roi et stocke
+ * les mouvements possibles qu'un Roi peut faire, pendant le contrôle */
+void get_king_moves(templateEchiquier [][8], int, int, int);
+
+
+/* la vie de chaque roi est mesurée dans son domaine libre
+ * Note: voir comment les valeurs de ces variables sont modifiées tout au long de
+ * le jeu à comprendre; un bon débogueur aidera avec cela
+ * 0 si le Roi peut se déplacer sur cette case
+ * 1 si une attaque est imminente sur cette case
+ * 2 si un carré adjacent a une position amicale
+ * 3 pour les carrés qui ne sont pas visibles lorsque le roi est sur les bords */
 static short WKingLife[3][3]; /*energy of white King*/
 static short BKingLife[3][3]; /*energy of black King*/
 
-/*if a King's state is check or safe_check these strings store the possible moves the King
- *can make in character pairs; for example "A8 H4 P3", "F2 B0" etc)*/
+
+/* si l'état d'un roi est check ou sauve_check ces chaînes stockent les mouvements possibles du Roi
+ * peut faire des paires de caractères; par exemple "A8 H4 P3", "F2 B0", etc.) */
 char *WKingMoves = NULL;
 char *BKingMoves = NULL;
 
 CastlingBool check_castling = ALL_CASTL_TRUE;
 
-/*counter for the total of game rounds; a game round ends when Black finishes his move*/
+
+/* compteur pour le total des parties; un tour de jeu se termine lorsque Black termine son déplacement */
 static unsigned short rc = 1;
 
 bool cstl_is_enabled = false;
@@ -54,11 +58,12 @@ extern void clear_buffer(void)
 	while ((clbuf=getchar()) != '\n');
 }
 
-void _initChessboard(ch_template chb[][8], unsigned k, char col)	/*k is row, col is column*/
+void _initiaiiserEchiquier(templateEchiquier chb[][8], unsigned k, char col)	/*k ligne / col  colonne*/
 {
 	if (k == 0 || k == 7) {
 		if (col == 'A' || col == 'H')
 			chb[k][col - 'A'].current = 'R';
+			//sprintf(chb[k][col - 'A'].ches ,"%s", "\u2657");
 		else if (col == 'B' || col == 'G')
 			chb[k][col - 'A'].current = 'N';
 		else if (col == 'C' || col == 'F')
@@ -68,7 +73,7 @@ void _initChessboard(ch_template chb[][8], unsigned k, char col)	/*k is row, col
 		else
 			chb[k][col - 'A'].current = 'K';
 		if (k == 0)
-			chb[k][col - 'A'].c = WHITE;	/*colorize the pieces*/
+			chb[k][col - 'A'].c = WHITE;	/*colorier les pieces*/
 		else
 			chb[k][col - 'A'].c = BLACK;
 		chb[k][col - 'A'].occ = true;
@@ -98,10 +103,10 @@ void _initChessboard(ch_template chb[][8], unsigned k, char col)	/*k is row, col
 		col = 'A';
 	}
 	if (k != 8)
-		_initChessboard(chb, k, col);
+		_initiaiiserEchiquier(chb, k, col);
 }
 
-void printBoard(ch_template chb[][8], const char p)
+void printBoard(templateEchiquier chb[][8], const char p)
 {
 #ifdef _WIN32
 	HANDLE cmdhandle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -296,7 +301,7 @@ void printError(int i)
 	}
 }
 
-char *findPiece(ch_template chb[][8], const char *input, int color)
+char *findPiece(templateEchiquier chb[][8], const char *input, int color)
 {
 	int i, j, k, l, count, conflict = 3;
 	/*Note: Conflict is a bool to check for two pieces attacking the same piece.
@@ -594,14 +599,14 @@ char *findPiece(ch_template chb[][8], const char *input, int color)
 extern void printInstructions(void)
 {
 	printf("%s%s\n%s\n%s\n%s\n%s\n%s %s\n%s\n",
-	"Enter your move in the following format: ", "\'xyz\'",
-	"x is the piece you want to move,",
-	"y is the letter of the column and",
-	"z is the number of the row.",
-	"Acceptable values for x are: R/r for Rook, N/n for Knight, B/b for Bishop, Q/q for Queen, K/k for King and P/p for Pawn.",
-	"Acceptable values for y are lowercase letters",
-	"from \'a\' to \'h\' and for z numbers from 1 to 8.",
-	"For example to move Bishop to e2 type Be2 or Pawn to a4 type Pa4.");
+"Entrez votre mouvement dans le format suivant:", "\'xyz \'",
+"x est la pièce que vous voulez déplacer",
+"y est la lettre de la colonne et",
+"z est le numéro de la ligne.",
+"Les valeurs acceptables pour x sont: R/r pour Rook, N/n pour Knight, B/b pour Bishop, Q/q pour Queen, K/k pour Roi et P/p pour Pawn.",
+"Les Pa6valeurs acceptables pour y sont des minuscules",
+"de \'a \' à \'h \' et pour les nombres z de 1 à 8.",
+"Par exemple, pour déplacer Bishop sur e2, tapez Be2 ou Pawn sur a4 type Pa4.");
 }
 
 extern void clear_screen(void)
@@ -617,7 +622,7 @@ extern void clear_screen(void)
 	 *don't forget to delete or comment lines 614-623*/
 }
 
-void setCastling(ch_template chb[][8], char *plInput, int color)
+void setCastling(templateEchiquier chb[][8], char *plInput, int color)
 {
 	int row, kcol_start = 4, kcol_end, rcol_start, rcol_end;
 
@@ -644,10 +649,10 @@ void setCastling(ch_template chb[][8], char *plInput, int color)
 	/*cstl_is_enabled = false;*/
 }
 
-bool isCheckMoveValid(ch_template chb[][8], char *plInput, char piece[2], int color)
+bool isCheckMoveValid(templateEchiquier chb[][8], char *plInput, char piece[2], int color)
 {
-	ch_template nxt_chb[8][8];
-	KingState nxtWK = safe, nxtBK = safe;
+	templateEchiquier nxt_chb[8][8];
+	EtatDuRoi nxtWK = safe, nxtBK = safe;
 	int i = 0;
 	for(; i < 8; i++)
 		memcpy(&nxt_chb[i], &chb[i], sizeof(chb[i]));
@@ -660,7 +665,7 @@ bool isCheckMoveValid(ch_template chb[][8], char *plInput, char piece[2], int co
 	return false;
 }
 
-bool movePiece(ch_template chb[][8], char *plInput, char piece[2], int color)
+bool movePiece(templateEchiquier chb[][8], char *plInput, char piece[2], int color)
 {
 	int startx, starty, endx, endy;
 
@@ -725,7 +730,7 @@ bool movePiece(ch_template chb[][8], char *plInput, char piece[2], int color)
 	return false;
 }
 
-bool piecesOverlap(ch_template chb[][8], const int sx, const int sy,
+bool piecesOverlap(templateEchiquier chb[][8], const int sx, const int sy,
 		const int ex, const int ey, const char piece)
 {
 	int tempx = sx, tempy = sy;
@@ -797,7 +802,7 @@ bool piecesOverlap(ch_template chb[][8], const int sx, const int sy,
 	return false;
 }
 
-void findKState(ch_template chb[][8], KingState *WK, KingState *BK)
+void findKState(templateEchiquier chb[][8], EtatDuRoi *WK, EtatDuRoi *BK)
 {
 	int i, j, WKx = -1, WKy, BKx = -1, BKy;
 
@@ -914,7 +919,7 @@ void findKState(ch_template chb[][8], KingState *WK, KingState *BK)
 }
 
 bool king_is_threatened(const int Kx, const int Ky, const int xpiece,
-			const int ypiece, const char c, const int color, ch_template chb[][8])
+			const int ypiece, const char c, const int color, templateEchiquier chb[][8])
 {
 	int k, l, max, ovlap_flag = false;
 
@@ -1137,7 +1142,7 @@ bool k_domain_ctrl(const int x_p, const int y_p, const int Kx,
 	return retvalue;
 }
 
-void get_king_moves(ch_template chb[][8], int Kx, int Ky, int color)
+void get_king_moves(templateEchiquier chb[][8], int Kx, int Ky, int color)
 {
 	KingDomain KD[3][3] = {{{Kx-1, Ky-1},{Kx-1, Ky},{Kx-1, Ky+1}},
 			{{Kx, Ky-1},{Kx, Ky},{Kx, Ky+1}},
@@ -1183,7 +1188,7 @@ void get_king_moves(ch_template chb[][8], int Kx, int Ky, int color)
 	}
 }
 
-void check_mate(KingState **WK, KingState **BK)
+void check_mate(EtatDuRoi **WK, EtatDuRoi **BK)
 {
 	int i, j, Wcounter = 0, Bcounter = 0;
 
@@ -1350,7 +1355,7 @@ char *pieceConflict(const char *piece_pos, const char p)
 	return fpiece;
 }
 
-extern void printBanner(const char *banner)
+extern void printMignon(const char *banner)
 {
 	int i, j, c = 0, len = (int)strlen(banner);
 #if !defined (__MINGW32__) || !defined(_WIN32)
