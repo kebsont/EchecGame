@@ -1,27 +1,37 @@
+/**
+ * @Author: Moustapha KEBE <kebson>
+ * @Date:   2017-10-12T11:55:27+02:00
+ * @Email:  mktapha@gmail.com
+ * @Last modified by:   kebson
+ * @Last modified time: 2017-10-26T04:14:03+02:00
+ */
+
+
+
 #include "chesslib.h"
 
 
 //prototypes pour les fonctions utilises ici
 
 //Verifier si le Roi est menace par un epiece ennemie, returns true si c'est vrai*/
-static bool king_is_threatened(const int, const int, const int, const int, const char, const int, templateEchiquier[][8]);
+static bool KingEstMenace(const int, const int, const int, const int, const char, const int, templateEchiquier[][8]);
 
 /*retirer king's life si une piece peut se deplacer autour de lui*/
 static bool k_domain_ctrl(const int, const int, const int, const int, const int, const char);
 
 /*vérifie si un roi est capturé dans le prochain coup, mettant ainsi fin au jeu
   ou s'il est sur le point d'être capturé en se déplaçant sur un certain carré */
-static void check_mate(EtatDuRoi**, EtatDuRoi**);
+static void echecEtMat(EtatDuRoi**, EtatDuRoi**);
 
 
-/* est appelé deux fois dans findKState avec les coordonnées de chaque roi et stocke
+/* est appelé deux fois dans findEtatKing avec les coordonnées de chaque roi et stocke
  * les mouvements possibles qu'un Roi peut faire, pendant le contrôle */
-void get_king_moves(templateEchiquier [][8], int, int, int);
+void getDeplacementKing(templateEchiquier [][8], int, int, int);
 
 
 /* la vie de chaque roi est mesurée dans son domaine libre
  * Note: voir
- AIlist = addMove(AIlist, tmp);comment les valeurs de ces variables sont modifiées tout au long de
+ AIlist = AjouterDeplacement(AIlist, tmp);comment les valeurs de ces variables sont modifiées tout au long de
  * le jeu à comprendre; un bon débogueur aidera avec cela
  * 0 si le Roi peut se déplacer sur cette case
  * 1 si une attaque est imminente sur cette case
@@ -29,7 +39,7 @@ void get_king_moves(templateEchiquier [][8], int, int, int);
 }
 if (chb[i-1][j+1].occ == true && chb[i-1][j+1].c != BLACK) {
 	tmp[1] = j+1 + 'A';
-	AIlist = addMove(AIlist, tmp);une position amicale
+	AIlist = AjouterDeplacement(AIlist, tmp);une position amicale
  * 3 pour les carrés qui ne sont pas visibles lorsque le roi est sur les bords */
 static short WKingLife[3][3]; /*energy of white King*/
 static short BKingLife[3][3]; /*energy of black King*/
@@ -67,16 +77,16 @@ void _initiaiiserEchiquier(templateEchiquier chb[][8], unsigned k, char col)	/*k
 {
 	if (k == 0 || k == 7) {
 		if (col == 'A' || col == 'H')
-			chb[k][col - 'A'].current = 'R';
+			chb[k][col - 'A'].courant = 'R';
 			//sprintf(chb[k][col - 'A'].ches ,"%s", "\u2657");
 		else if (col == 'B' || col == 'G')
-			chb[k][col - 'A'].current = 'N';
+			chb[k][col - 'A'].courant = 'N';
 		else if (col == 'C' || col == 'F')
-			chb[k][col - 'A'].current = 'B';
+			chb[k][col - 'A'].courant = 'B';
 		else if (col == 'D')
-			chb[k][col - 'A'].current = 'Q';
+			chb[k][col - 'A'].courant = 'Q';
 		else
-			chb[k][col - 'A'].current = 'K';
+			chb[k][col - 'A'].courant = 'K';
 		if (k == 0)
 			chb[k][col - 'A'].c = WHITE;	/*colorier les pieces*/
 		else
@@ -90,14 +100,14 @@ void _initiaiiserEchiquier(templateEchiquier chb[][8], unsigned k, char col)	/*k
 			chb[k][col - 'A'].c = WHITE;
 		else
 			chb[k][col - 'A'].c = BLACK;
-		chb[k][col - 'A'].current = 'P';
+		chb[k][col - 'A'].courant = 'P';
 		chb[k][col - 'A'].occ = true;
 		chb[k][col - 'A'].square[0] = col;
 		chb[k][col - 'A'].square[1] = k + '1';
 		col = col + 1;
 	} else if (k >= 2 && k <= 5) {
 		chb[k][col - 'A'].c = EMPTY;
-		chb[k][col - 'A'].current = 'e';
+		chb[k][col - 'A'].courant = 'e';
 		chb[k][col - 'A'].occ = false;
 		chb[k][col - 'A'].square[0] = col;
 		chb[k][col - 'A'].square[1] = k + '1';
@@ -147,7 +157,7 @@ void printBoard(templateEchiquier chb[][8], const char p)
 							SetConsoleTextAttribute(cmdhandle, FOREGROUND_RED);
 						else
 							SetConsoleTextAttribute(cmdhandle, FOREGROUND_GREEN);
-						printf(" %c ", chb[y][x].current);
+						printf(" %c ", chb[y][x].courant);
 						SetConsoleTextAttribute(cmdhandle, sv_att);
 					}
 					x++;
@@ -197,36 +207,36 @@ void printBoard(templateEchiquier chb[][8], const char p)
 					else {
 						if (p == 'a') {
 							if (chb[y][x].c == BLACK)
-								printf(" %s%c%s ", KRED, chb[y][x].current, RESET);
+								printf(" %s%c%s ", KRED, chb[y][x].courant, RESET);
 							else
-								printf(" %s%c%s ", KYEL, chb[y][x].current, RESET);
+								printf(" %s%c%s ", KYEL, chb[y][x].courant, RESET);
 						} else {
-							if (chb[y][x].current == 'P') {
+							if (chb[y][x].courant == 'P') {
 								if (chb[y][x].c == BLACK)
 									printf(" \u265F ");
 								else
 									printf(" \u2659 ");
-							} else if (chb[y][x].current == 'Q') {
+							} else if (chb[y][x].courant == 'Q') {
 								if (chb[y][x].c == BLACK)
 									printf(" \u265B ");
 								else
 									printf(" \u2655 ");
-							} else if (chb[y][x].current == 'B') {
+							} else if (chb[y][x].courant == 'B') {
 								if (chb[y][x].c == BLACK)
 									printf(" \u265D ");
 								else
 									printf(" \u2657 ");
-							} else if (chb[y][x].current == 'R') {
+							} else if (chb[y][x].courant == 'R') {
 								if (chb[y][x].c == BLACK)
 									printf(" \u265C ");
 								else
 									printf(" \u2656 ");
-							} else if (chb[y][x].current == 'N') {
+							} else if (chb[y][x].courant == 'N') {
 								if (chb[y][x].c == BLACK)
 									printf(" \u265E ");
 								else
 									printf(" \u2658 ");
-							} else if (chb[y][x].current == 'K') {
+							} else if (chb[y][x].courant == 'K') {
 								if (chb[y][x].c == BLACK)
 									printf(" \u265A ");
 								else
@@ -320,7 +330,7 @@ char *findPiece(templateEchiquier chb[][8], const char *input, int color)
 	retvalue[2] = '\0';
 	for (i = 0; i < 8; i++) {
 		for (j = 0; j < 8; j++) {
-			if (chb[i][j].current == input[0] && chb[i][j].c == color) {
+			if (chb[i][j].courant == input[0] && chb[i][j].c == color) {
 				retvalue[0] = chb[i][j].square[0];
 				retvalue[1] = chb[i][j].square[1];
 				if (input[0] == 'P'){
@@ -611,7 +621,7 @@ extern void printInstructions(void)
 "Les valeurs acceptables pour x sont: R/r pour Rook, N/n pour Knight, B/b pour Bishop, Q/q pour Queen, K/k pour Roi et P/p pour Pawn.",
 "Les Pa6valeurs acceptables pour y sont des minuscules",
 "de \'a \' à \'h \' et pour les nombres z de 1 à 8.",
-"Par exemple, pour déplacer Bishop sur e2, tapez Be2 ou Pawn sur a4 type Pa4.");
+"Par exemple, pour déplacer Bishop sur e2, tapez Be2 ou Pawn sur a4 tapez Pa4.");
 }
 
 extern void clear_screen(void)
@@ -622,9 +632,9 @@ extern void clear_screen(void)
 	system("cls");
 #endif
 	/*puts( "\033[2J" );
-	 *Note: Clear screen using ASCII; doesn't look that good.
-	 *Only use it if you can't install libncurses and
-	 *don't forget to delete or comment lines 614-623*/
+	 *Note: Effacer l'écran en utilisant ASCII; ça n'a pas l'air si bon.
+	 * On lutiliz ke si on a pas installer libncurses et
+	 * ne pas oublier de supprimer ou de commenter les lignes juste ci-dessus*/
 }
 
 void setCastling(templateEchiquier chb[][8], char *plInput, int color)
@@ -646,11 +656,11 @@ void setCastling(templateEchiquier chb[][8], char *plInput, int color)
 	}
 	chb[row][kcol_start].occ = chb[row][rcol_start].occ = false;
 	chb[row][kcol_start].c = chb[row][rcol_start].c = EMPTY;
-	chb[row][kcol_start].current = chb[row][rcol_start].current = 'e';
+	chb[row][kcol_start].courant = chb[row][rcol_start].courant = 'e';
 	chb[row][kcol_end].occ = chb[row][rcol_end].occ = true;
 	chb[row][kcol_end].c = chb[row][rcol_end].c = color;
-	chb[row][kcol_end].current = 'K';
-	chb[row][rcol_end].current = 'R';
+	chb[row][kcol_end].courant = 'K';
+	chb[row][rcol_end].courant = 'R';
 	/*cstl_is_enabled = false;*/
 }
 
@@ -662,15 +672,15 @@ bool verifiValideDeplacement(templateEchiquier chb[][8], char *plInput, char pie
 	for(; i < 8; i++)
 		memcpy(&nxt_chb[i], &chb[i], sizeof(chb[i]));
 
-	if (!movePiece(nxt_chb, plInput, piece, color))
+	if (!DeplacerPiece(nxt_chb, plInput, piece, color))
 		return false;
-	findKState(nxt_chb, &nxtWK, &nxtBK);
+	findEtatKing(nxt_chb, &nxtWK, &nxtBK);
 	if (nxtWK != check && nxtBK != check)
 		return true;
 	return false;
 }
 
-bool movePiece(templateEchiquier chb[][8], char *plInput, char piece[2], int color)
+bool DeplacerPiece(templateEchiquier chb[][8], char *plInput, char piece[2], int color)
 {
 	int startx, starty, endx, endy;
 
@@ -679,10 +689,10 @@ bool movePiece(templateEchiquier chb[][8], char *plInput, char piece[2], int col
 	startx = piece[1] - '1';
 	starty = piece[0] - 'A';
 	if (!piecesOverlap(chb, startx, starty, endx, endy, plInput[0])) {
-		/*Note: If a piece of the same color occupies the square your
-		 *piece is about to move on, the move isn't valid and movePiece returns false.*/
+		/*Note: Si un morceau de la même couleur occupe le carré de votre
+		* la pièce est sur le point de bouger, le déplacement n'est pas valide et DeplacerPiece renvoie false.*/
 		if (chb[endx][endy].c != color) {
-			if (chb[startx][starty].current == 'K' || chb[startx][starty].current == 'R') {
+			if (chb[startx][starty].courant == 'K' || chb[startx][starty].courant == 'R') {
 				if (startx == 0) {
 					if (starty == 0)
 						check_castling.WR_left = false;
@@ -702,11 +712,11 @@ bool movePiece(templateEchiquier chb[][8], char *plInput, char piece[2], int col
 				}
 			}
 			chb[endx][endy].occ = true;
-			chb[endx][endy].current = chb[startx][starty].current;
+			chb[endx][endy].courant = chb[startx][starty].courant;
 			chb[endx][endy].c = color;
 			chb[startx][starty].occ = false;
 			chb[startx][starty].c = EMPTY;
-			chb[startx][starty].current = 'e';
+			chb[startx][starty].courant = 'e';
 			if (plInput[0] == 'P' && ((startx == 1 && endx == 0) || (startx == 6 && endx == 7))) {
 				/*options for the promotion of the pawn*/
 				char *promote_selection;
@@ -715,13 +725,13 @@ bool movePiece(templateEchiquier chb[][8], char *plInput, char piece[2], int col
 				promote_selection = getPlayerInput();
 				if (!strcmp(promote_selection, "queen") || !strcmp(promote_selection, "Q") ||
 					!strcmp(promote_selection, "QUEEN") || !strcmp(promote_selection, "q")) {
-					chb[endx][endy].current = 'Q';
+					chb[endx][endy].courant = 'Q';
 				} else if (!strcmp(promote_selection, "bishop") || !strcmp(promote_selection, "B") ||
 					!strcmp(promote_selection, "BISHOP") || !strcmp(promote_selection, "b")) {
-					chb[endx][endy].current = 'B';
+					chb[endx][endy].courant = 'B';
 				} else if (!strcmp(promote_selection, "knight") || !strcmp(promote_selection, "N") ||
 					!strcmp(promote_selection, "KNIGHT") || !strcmp(promote_selection, "n")) {
-					chb[endx][endy].current = 'N';
+					chb[endx][endy].courant = 'N';
 				} else {
 					free(promote_selection);
 					printError(2);
@@ -807,17 +817,17 @@ bool piecesOverlap(templateEchiquier chb[][8], const int sx, const int sy,
 	return false;
 }
 
-void findKState(templateEchiquier chb[][8], EtatDuRoi *WK, EtatDuRoi *BK)
+void findEtatKing(templateEchiquier chb[][8], EtatDuRoi *WK, EtatDuRoi *BK)
 {
 	int i, j, WKx = -1, WKy, BKx = -1, BKy;
 
-	/*Note: Both Kings' domains are zeroed out after each round
-	 *to recalculate their values based on the new state of the board.*/
+	/*Note: Les domaines des deux rois sont remis à zéro après chaque tour
+* recalculer leurs valeurs en fonction du nouvel état du tableau.*/
 	memset(WKingLife, 0, 9*sizeof(short));
 	memset(BKingLife, 0, 9*sizeof(short));
 	for (i = 0; i < 8; i++) {
 		for (j = 0; j < 8; j++) {
-			if (chb[i][j].current == 'K') {
+			if (chb[i][j].courant == 'K') {
 				if (chb[i][j].c == WHITE) {
 					WKx = i;
 					WKy = j;
@@ -828,7 +838,7 @@ void findKState(templateEchiquier chb[][8], EtatDuRoi *WK, EtatDuRoi *BK)
 			}
 		}
 	}
-	if (WKx == -1) {	/*temporary hack to end the game if the King is captured*/
+	if (WKx == -1) {	/*hack temporaire pour mettre fin au jeu si le roi est capturé*/
 		*WK = checkmate;
 		return;
 	} else if (BKx == -1) {
@@ -839,48 +849,48 @@ void findKState(templateEchiquier chb[][8], EtatDuRoi *WK, EtatDuRoi *BK)
 	for (i = 0; i < 8; i++) {
 		for (j = 0; j < 8; j++) {
 			if (chb[i][j].c == BLACK) {
-				if (chb[i][j].current == 'P') {
+				if (chb[i][j].courant == 'P') {
 					k_domain_ctrl(i,j,WKx,WKy,chb[i][j].c, 'e');
 					k_domain_ctrl(i-1,j+1,WKx,WKy,chb[i][j].c, 'e');
 					k_domain_ctrl(i-1,j-1,WKx,WKy,chb[i][j].c, 'e');
 					k_domain_ctrl(i,j,BKx,BKy,chb[i][j].c, 'f');
 				}
-				if (chb[i][j].current == 'R' || chb[i][j].current == 'Q') {
-					if ((WKx == i) && (piecesOverlap(chb,i,j,WKx,WKy,chb[i][j].current) == false)) {
+				if (chb[i][j].courant == 'R' || chb[i][j].courant == 'Q') {
+					if ((WKx == i) && (piecesOverlap(chb,i,j,WKx,WKy,chb[i][j].courant) == false)) {
 						*WK = check;
 					}
-					if ((WKy == j) && (piecesOverlap(chb,i,j,WKx,WKy,chb[i][j].current) == false)) {
+					if ((WKy == j) && (piecesOverlap(chb,i,j,WKx,WKy,chb[i][j].courant) == false)) {
 						*WK = check;
 					}
-					king_is_threatened(WKx, WKy, i, j, chb[i][j].current, chb[i][j].c, chb);
+					KingEstMenace(WKx, WKy, i, j, chb[i][j].courant, chb[i][j].c, chb);
 				}
-				if (chb[i][j].current == 'B' || chb[i][j].current == 'Q' ||
-					chb[i][j].current == 'N' || chb[i][j].current == 'K') {
-					if (king_is_threatened(WKx, WKy, i, j, chb[i][j].current, chb[i][j].c, chb))
+				if (chb[i][j].courant == 'B' || chb[i][j].courant == 'Q' ||
+					chb[i][j].courant == 'N' || chb[i][j].courant == 'K') {
+					if (KingEstMenace(WKx, WKy, i, j, chb[i][j].courant, chb[i][j].c, chb))
 						*WK = safe_check;
 				}
-				if (chb[i][j].current != 'K')
+				if (chb[i][j].courant != 'K')
 					k_domain_ctrl(i, j, BKx, BKy, chb[i][j].c, 'f');
 			} else if (chb[i][j].c == WHITE) {
-				if (chb[i][j].current == 'P') {
+				if (chb[i][j].courant == 'P') {
 					k_domain_ctrl(i,j,BKx,BKy,chb[i][j].c, 'e');
 					k_domain_ctrl(i+1,j+1,BKx,BKy,chb[i][j].c, 'e');
 					k_domain_ctrl(i+1,j-1,BKx,BKy,chb[i][j].c, 'e');
 					k_domain_ctrl(i,j,WKx,WKy,chb[i][j].c, 'f');
 				}
-				if (chb[i][j].current == 'R' || chb[i][j].current == 'Q') {
-					if ((BKx == i) && (piecesOverlap(chb,i,j,BKx,BKy,chb[i][j].current) == false))
+				if (chb[i][j].courant == 'R' || chb[i][j].courant == 'Q') {
+					if ((BKx == i) && (piecesOverlap(chb,i,j,BKx,BKy,chb[i][j].courant) == false))
 						*BK = check;
-					if ((BKy == j) && (piecesOverlap(chb,i,j,BKx,BKy,chb[i][j].current) == false))
+					if ((BKy == j) && (piecesOverlap(chb,i,j,BKx,BKy,chb[i][j].courant) == false))
 						*BK = check;
-					king_is_threatened(BKx, BKy, i, j, chb[i][j].current, chb[i][j].c, chb);
+					KingEstMenace(BKx, BKy, i, j, chb[i][j].courant, chb[i][j].c, chb);
 				}
-				if (chb[i][j].current == 'B' || chb[i][j].current == 'Q' ||
-					chb[i][j].current == 'N' || chb[i][j].current == 'K') {
-					if (king_is_threatened(BKx, BKy, i, j, chb[i][j].current, chb[i][j].c, chb) == true)
+				if (chb[i][j].courant == 'B' || chb[i][j].courant == 'Q' ||
+					chb[i][j].courant == 'N' || chb[i][j].courant == 'K') {
+					if (KingEstMenace(BKx, BKy, i, j, chb[i][j].courant, chb[i][j].c, chb) == true)
 						*BK = safe_check;
 				}
-				if (chb[i][j].current != 'K')
+				if (chb[i][j].courant != 'K')
 					k_domain_ctrl(i, j, WKx, WKy, chb[i][j].c, 'f');
 			}
 		}
@@ -918,12 +928,12 @@ void findKState(templateEchiquier chb[][8], EtatDuRoi *WK, EtatDuRoi *BK)
 	} else if (BKingLife[1][1] == 0) {
 		*BK = safe;
 	}
-	check_mate(&WK, &BK);
-	get_king_moves(chb, WKx, WKy, WHITE);
-	get_king_moves(chb, BKx, BKy, BLACK);
+	echecEtMat(&WK, &BK);
+	getDeplacementKing(chb, WKx, WKy, WHITE);
+	getDeplacementKing(chb, BKx, BKy, BLACK);
 }
 
-bool king_is_threatened(const int Kx, const int Ky, const int xpiece,
+bool KingEstMenace(const int Kx, const int Ky, const int xpiece,
 			const int ypiece, const char c, const int color, templateEchiquier chb[][8])
 {
 	int k, l, max, ovlap_flag = false;
@@ -936,7 +946,7 @@ bool king_is_threatened(const int Kx, const int Ky, const int xpiece,
 				max = Ky;
 			for (l = ypiece-1; l >= max; l--) {
 				if (chb[xpiece][l].occ == true && l!=Ky && ovlap_flag == false) {
-					if (chb[xpiece][l].c != color)	/*still testing this*/
+					if (chb[xpiece][l].c != color)	/*encore en train de tester*/
 						k_domain_ctrl(xpiece, l, Kx, Ky, color, 'e');
 					ovlap_flag = true;
 				}
@@ -958,7 +968,7 @@ bool king_is_threatened(const int Kx, const int Ky, const int xpiece,
 					k_domain_ctrl(xpiece, l, Kx, Ky, color, 'e');
 			}
 		}
-		ovlap_flag = false;	/*reset the flag just in case*/
+		ovlap_flag = false;	/*réinitialiser le drapeau juste au cas où*/
 		if (xpiece > Kx) {
 			if (Kx >= 1)
 				max = Kx-1;
@@ -993,7 +1003,7 @@ bool king_is_threatened(const int Kx, const int Ky, const int xpiece,
 		if (Kx == xpiece || Ky == ypiece) {
 			return false;
 		}
-		ovlap_flag = false;	/*reset the flag here as well, in case c is Queen*/
+		ovlap_flag = false;	/*réinitialiser le flag ici aussi, dans le cas où c est Queen*/
 		if (Kx > xpiece && Ky > ypiece) {
 			k = xpiece + 1;
 			l = ypiece + 1;
@@ -1147,7 +1157,7 @@ bool k_domain_ctrl(const int x_p, const int y_p, const int Kx,
 	return retvalue;
 }
 
-void get_king_moves(templateEchiquier chb[][8], int Kx, int Ky, int color)
+void getDeplacementKing(templateEchiquier chb[][8], int Kx, int Ky, int color)
 {
 	KingDomain KD[3][3] = {{{Kx-1, Ky-1},{Kx-1, Ky},{Kx-1, Ky+1}},
 			{{Kx, Ky-1},{Kx, Ky},{Kx, Ky+1}},
@@ -1182,10 +1192,10 @@ void get_king_moves(templateEchiquier chb[][8], int Kx, int Ky, int color)
 	if (color == BLACK && !str_index) {
 		free(DeplacementBKing);
 		DeplacementBKing = NULL;
-		/*Weird stuff: Game segfaults if DeplacementBKing and DeplacementWKing aren't set
-		 *to NULL immediately after freeing; I reproduced the same situation
-		 *in a small test program and it worked just by freeing the strings
-		 *(without setting to NULL). Again if you have an explanation contact me.*/
+		/*Trucs bizarres: segfaults de jeu si DeplacementBKing et DeplacementWKing ne sont pas définis
+* à NULL immédiatement après la libération; J'ai reproduit la même situation
+* dans un petit programme de test et cela a fonctionné en libérant les cordes
+* (sans réglage à NULL). Encore une fois si vous avez une explication contactez-moi.*/
 	}
 	if (color == WHITE && !str_index) {
 		free(DeplacementWKing);
@@ -1193,7 +1203,7 @@ void get_king_moves(templateEchiquier chb[][8], int Kx, int Ky, int color)
 	}
 }
 
-void check_mate(EtatDuRoi **WK, EtatDuRoi **BK)
+void echecEtMat(EtatDuRoi **WK, EtatDuRoi **BK)
 {
 	int i, j, Wcounter = 0, Bcounter = 0;
 
@@ -1230,30 +1240,30 @@ void date_filename(char *buf, int ln)
 	strftime(buf, ln, "%a %Y-%m-%d %H%M%S.txt", &t);
 }
 
-void write_to_log(int round, FILE* logf, char *plInput, char piece[2])
+void ecrireDansLog(int round, FILE* logf, char *plInput, char piece[2])
 {
 
 	if (!strncmp(piece, CSTL_LEFTROOK, 2)) {
 		if (round == WHITE) {
-			fprintf(logf, "Round  #%d:\tWhite moves Rook from A1 to D1 and King from E1 to C1\n", rc);
+			fprintf(logf, "Round  #%d:\tBlanc déplace Rook de A1 à D1 et King de E1 à C1\n", rc);
 		} else {
-			fprintf(logf, "           \tBlack moves Rook from A8 to D8 and King from E8 to C8\n");
+			fprintf(logf, "           \tBlack déplace Rook de A8 à D8 et King de E8 à C8\n");
 			rc++;
 		}
 		return;
 	} else if (!strncmp(piece, CSTL_RIGHTROOK, 2)) {
 		if (round == WHITE)
-			fprintf(logf, "Round  #%d:\tWhite moves Rook from H1 to F1 and King from E1 to G1\n", rc);
+			fprintf(logf, "Round  #%d:\tBlanc déplace Rook de H1 à F1 et King de E1 à G1\n", rc);
 		else {
-			fprintf(logf, "           \tBlack moves Rook from H8 to F8 and King from E8 to G8\n");
+			fprintf(logf, "           \tBlack déplace Rook de H8 à F8 et King de E8 à G8\n");
 			rc++;
 		}
 		return;
 	}
 	if (round == WHITE) {
-		fprintf(logf, "Round  #%d:\tWhite moves ", rc);
+		fprintf(logf, "Round  #%d:\tDéplacements Blanc ", rc);
 	} else {
-		fprintf(logf, "           \tBlack moves ");
+		fprintf(logf, "           \tDéplacements Noir  ");
 		rc++;
 	}
 	if (plInput[0] == 'P') {
@@ -1269,7 +1279,7 @@ void write_to_log(int round, FILE* logf, char *plInput, char piece[2])
 	} else if (plInput[0] == 'K') {
 		fprintf(logf, "King ");
 	}
-	fprintf(logf, "from %c%c to %c%c\n", piece[0], piece[1], plInput[1], plInput[2]);
+	fprintf(logf, "de %c%c à %c%c\n", piece[0], piece[1], plInput[1], plInput[2]);
 }
 
 char *getPlayerInput(void)
@@ -1324,9 +1334,9 @@ char *pieceConflict(const char *piece_pos, const char p)
 			break;
 	}
 	if (piece_pos[0] != piece_pos[2]) {
-		printf("%s %s %s %s?\n%s", "Did you mean to move the left",
-				name, "or the right", name,
-				"Please specify with either 'left'/'LEFT' or 'right'/'RIGHT': ");
+		printf("%s %s %s %s?\n%s", "Vouliez-vous vous déplacer à gauche",
+				name, "ou à droite", name,
+				"Spécifiez le avec soit 'left'/'LEFT' ou 'right'/'RIGHT': ");
 		do {
 			temp = getPlayerInput();
 		} while (strcmp(temp, "left") && strcmp(temp, "right")
@@ -1340,9 +1350,9 @@ char *pieceConflict(const char *piece_pos, const char p)
 			memcpy(fpiece, piece_pos, 2);
 		}
 	} else {
-		printf("%s %s %s %s %s\n%s", "Did you mean to move the",
-				name, "above or the", name, "below?",
-				"Please specify with either 'up'/'UP' or 'down'/'DOWN': ");
+		printf("%s %s %s %s %s\n%s", "Voulez-vous vous déplacer",
+				name, "ci-dessus ou", name, "en dessous?",
+				"Spécifiez le avec soit avec soit 'up'/'UP' ou 'down'/'DOWN': ");
 		do {
 			temp = getPlayerInput();
 		} while (strcmp(temp, "up") && strcmp(temp, "down")

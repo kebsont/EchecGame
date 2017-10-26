@@ -1,0 +1,3 @@
+Round  #1:	Déplacements Blanc Pawn de B2 à B3
+           	Déplacements Noir  Pawn de B7 à B6
+Round  #2:	Déplacements Blanc Pawn de G2 à G4

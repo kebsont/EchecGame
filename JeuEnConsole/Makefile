@@ -1,3 +1,11 @@
+# @Author: Moustapha KEBE <kebson>
+# @Date:   2017-10-12T11:33:21+02:00
+# @Email:  mktapha@gmail.com
+# @Last modified by:   kebson
+# @Last modified time: 2017-10-26T08:02:13+02:00
+
+
+
 CC := gcc
 CFLAGS := -g -Wall -std=gnu99 -fgnu89-inline
 LINKER :=

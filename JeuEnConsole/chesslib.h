@@ -1,3 +1,12 @@
+/**
+ * @Author: Moustapha KEBE <kebson>
+ * @Date:   2017-10-12T11:55:27+02:00
+ * @Email:  mktapha@gmail.com
+ * @Last modified by:   kebson
+ * @Last modified time: 2017-10-26T04:16:18+02:00
+ */
+
+
 
 #pragma once
 
@@ -57,7 +66,7 @@
 /*echiquier test*/
 	typedef struct templateEchiquier {
 	char *ches ;
-	char current ;	/*lettre courante, v pour carré vide*/
+	char courant ;	/*lettre courante, v pour carré vide*/
 	char square[2];	/*carré actuel sur la carte, par exemple A1, H4*/
 	bool occ;	/*un flag a checker si un carre est occupe*/
 	int c;	/*couleur piece, 0 s'il nya pas de piece, 1 pour black, 2 pour white*/
@@ -123,7 +132,7 @@ char *findPiece (templateEchiquier chb[][8], const char *input, int color);
  * plInput: chaîne avec la pièce et le carré à déplacer, par ex. PH3 NA5 KC1
  * piece: tableau de deux caractères pour la colonne et la ligne du carré le
  * pièce est allumée, par ex. H3 C7*/
-bool movePiece (templateEchiquier chb[][8], char *plInput, char piece[2], int color);
+bool DeplacerPiece (templateEchiquier chb[][8], char *plInput, char piece[2], int color);
 
 /*vérifie si un déplacement est valide selon que la pièce chevauche d'autres pièces ou non
  * il prend les coordonnées de deux pièces (la première doit toujours être Q, R ou B),
@@ -135,7 +144,7 @@ bool piecesOverlap (templateEchiquier chb[][8], const int sx, const int sy, cons
 
 /*dans le cas où le domaine d'un roi est menacé de quelque façon (check ou safe_check) cette fonction
  * vérifie si le prochain coup entré enlève le Roi d'une situation menaçante;
- * les arguments sont les mêmes que movePiece */
+ * les arguments sont les mêmes que DeplacerPiece */
 bool verifiValideDeplacement(templateEchiquier chb[][8], char *plInput, char piece[2], int color);
 
 /*vérifier la validité de l'entrée du joueur; renvoie false pour la mauvaise entrée et true sinon
@@ -152,7 +161,7 @@ void date_filename (char*, int);
  * logf: descripteur de fichier du fichier journal
  * plInput: entrée par le joueur; contient la pièce et le carré dans lequel la pièce s'est déplacée
  * piece: le carré initial de la pièce était dedans*/
-void write_to_log (int round, FILE* logf, char *plInput, char piece[2]);
+void ecrireDansLog (int round, FILE* logf, char *plInput, char piece[2]);
 
 /* erreur basique affichant les erreurs; ecrit dans stderr*/
 void printError (int);
@@ -168,7 +177,7 @@ char *pieceConflict (const char *piece_pos, const char p);
 
 /*trouve et sauve l'état de chaque Roi pour le tour en cours; voir
  * l'enum d'EtatDuRoi pour tous les états qu'un Roi peut avoir*/
-void findKState (templateEchiquier chb[][8], EtatDuRoi *WK, EtatDuRoi *BK);
+void findEtatKing (templateEchiquier chb[][8], EtatDuRoi *WK, EtatDuRoi *BK);
 
 /*prend soin de tous les mouvements qui se produisent pendant le roque; appelez seulement si cstl_is_enabled est vrai
  * plInput: la pièce de roque qui a été retournée par findPiece

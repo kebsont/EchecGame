@@ -1,3 +1,13 @@
+/**
+ * @Author: Moustapha KEBE <kebson>
+ * @Date:   2017-10-12T11:55:27+02:00
+ * @Email:  mktapha@gmail.com
+ * @Last modified by:   kebson
+ * @Last modified time: 2017-10-26T04:16:56+02:00
+ */
+
+
+
 #include "chesslib.h"
 
 int main(int argc, char *argv[])
@@ -155,7 +165,7 @@ int main(int argc, char *argv[])
 				goto LOOP;
 			}
 		}
-		if (movePiece(echiquier, playerInput, piece_a_deplacer, round) == false) {
+		if (DeplacerPiece(echiquier, playerInput, piece_a_deplacer, round) == false) {
 			p_err = 3;
 			goto LOOP;
 		}
@@ -166,11 +176,11 @@ int main(int argc, char *argv[])
 			if (cstl_is_enabled) {
 				cstl_is_enabled = false;
 				if (playerInput[1] == 'C' || playerInput[1] == 'D')
-					write_to_log(round, logfile, playerInput, CSTL_LEFTROOK);
+					ecrireDansLog(round, logfile, playerInput, CSTL_LEFTROOK);
 				else
-					write_to_log(round, logfile, playerInput, CSTL_RIGHTROOK);
+					ecrireDansLog(round, logfile, playerInput, CSTL_RIGHTROOK);
 			} else {
-				write_to_log(round, logfile, playerInput, piece_a_deplacer);
+				ecrireDansLog(round, logfile, playerInput, piece_a_deplacer);
 			}
 		}
 		fclose(logfile);
@@ -178,7 +188,7 @@ int main(int argc, char *argv[])
 		round_compteur++;
 		p_err = 0;
 		compteur_boucle = 2;
-		findKState(echiquier, &roi_blanc, &roi_noir);
+		findEtatKing(echiquier, &roi_blanc, &roi_noir);
 	}
 	ENDGAME:
 	if (roi_blanc == checkmate || roi_noir == checkmate) {

@@ -1,52 +1,61 @@
+/**
+ * @Author: Moustapha KEBE <kebson>
+ * @Date:   2017-10-12T11:33:21+02:00
+ * @Email:  mktapha@gmail.com
+ * @Last modified by:   kebson
+ * @Last modified time: 2017-10-26T04:16:12+02:00
+ */
+
+
 
 #include "chesslib.h"
 
-static unsigned total_moves;
+static unsigned deplcmtTotal;
 
-typedef struct PMoveNode {
+typedef struct PDeplacementNoeud {
 	char move[4];
-	struct PMoveNode *nxt;
-} PMoveNode;
+	struct PDeplacementNoeud *nxt;
+} PDeplacementNoeud;
 
 
-PMoveNode *addMove(PMoveNode *head, char m[4])
+PDeplacementNoeud *AjouterDeplacement(PDeplacementNoeud *racine, char m[4])
 {
-	total_moves++;
-	if (!head) {
-		head = malloc(sizeof(PMoveNode));
-		memcpy(head->move, m, 4);
-		head->nxt = NULL;
-		return head;
+	deplcmtTotal++;
+	if (!racine) {
+		racine = malloc(sizeof(PDeplacementNoeud));
+		memcpy(racine->move, m, 4);
+		racine->nxt = NULL;
+		return racine;
 	}
-	PMoveNode *new = malloc(sizeof(PMoveNode));
+	PDeplacementNoeud *new = malloc(sizeof(PDeplacementNoeud));
 	memcpy(new->move, m, 4);
-	new->nxt = head;
+	new->nxt = racine;
 	return new;
 }
 
 #ifndef NDEBUG
-void printList(PMoveNode *head)
+void afficherList(PDeplacementNoeud *racine)
 {
-	if (!head)
+	if (!racine)
 		return;
 	do {
-		printf("%s\n", head->move);
-		head = head->nxt;
-	} while (head);
+		printf("%s\n", racine->move);
+		racine = racine->nxt;
+	} while (racine);
 }
 #endif
 
-void freeList(PMoveNode *head)
+void freeList(PDeplacementNoeud *racine)
 {
-	PMoveNode *temp;
-	while (head != NULL) {
-		temp = head;
-		head = head->nxt;
+	PDeplacementNoeud *temp;
+	while (racine != NULL) {
+		temp = racine;
+		racine = racine->nxt;
 		free(temp);
 	}
 }
-
-PMoveNode *getMoves(PMoveNode *AIlist, templateEchiquier chb[][8])
+// un peu d'intelligence artif
+PDeplacementNoeud *getDeplacements(PDeplacementNoeud *AIlist, templateEchiquier chb[][8])
 {
 	int i, j, k, l;
 	char tmp[4];
@@ -55,30 +64,30 @@ PMoveNode *getMoves(PMoveNode *AIlist, templateEchiquier chb[][8])
 	for (i = 0; i < 8; i++) {
 		for (j = 0; j < 8; j++) {
 			if(chb[i][j].c == BLACK) {
-				tmp[0] = chb[i][j].current;
-				if (chb[i][j].current == 'P') {
+				tmp[0] = chb[i][j].courant;
+				if (chb[i][j].courant == 'P') {
 					tmp[2] = i-1 + '1';
 					if (chb[i-1][j].occ == false) {
 						tmp[1] = j + 'A';
-						AIlist = addMove(AIlist, tmp);
+						AIlist = AjouterDeplacement(AIlist, tmp);
 					}
 					if (chb[i-1][j+1].occ == true && chb[i-1][j+1].c != BLACK) {
 						tmp[1] = j+1 + 'A';
-						AIlist = addMove(AIlist, tmp);
+						AIlist = AjouterDeplacement(AIlist, tmp);
 					}
 					if (chb[i-1][j-1].occ == true && chb[i-1][j-1].c != BLACK) {
 						tmp[1] = j-1 + 'A';
-						AIlist = addMove(AIlist, tmp);
+						AIlist = AjouterDeplacement(AIlist, tmp);
 					}
 				}
-				if (chb[i][j].current == 'B' || chb[i][j].current == 'Q') {
+				if (chb[i][j].courant == 'B' || chb[i][j].courant == 'Q') {
 					k = i - 1;
 					l = j - 1;
 					while ((k <= 7 && k >= 0) && (l >= 0 && l <= 7)) {
 						if (chb[k][l].c != chb[i][j].c) {
 							tmp[1] = l + 'A';
 							tmp[2] = k + '1';
-							AIlist = addMove(AIlist, tmp);
+							AIlist = AjouterDeplacement(AIlist, tmp);
 						}
 						if (chb[k][l].occ == true) break;
 						k--;
@@ -90,7 +99,7 @@ PMoveNode *getMoves(PMoveNode *AIlist, templateEchiquier chb[][8])
 						if (chb[k][l].c != chb[i][j].c) {
 							tmp[1] = l + 'A';
 							tmp[2] = k + '1';
-							AIlist = addMove(AIlist, tmp);
+							AIlist = AjouterDeplacement(AIlist, tmp);
 						}
 						if (chb[k][l].occ == true) break;
 						k--;
@@ -102,7 +111,7 @@ PMoveNode *getMoves(PMoveNode *AIlist, templateEchiquier chb[][8])
 						if (chb[k][l].c != chb[i][j].c) {
 							tmp[1] = l + 'A';
 							tmp[2] = k + '1';
-							AIlist = addMove(AIlist, tmp);
+							AIlist = AjouterDeplacement(AIlist, tmp);
 						}
 						if (chb[k][l].occ == true) break;
 						k++;
@@ -114,14 +123,14 @@ PMoveNode *getMoves(PMoveNode *AIlist, templateEchiquier chb[][8])
 						if (chb[k][l].c != chb[i][j].c) {
 							tmp[1] = l + 'A';
 							tmp[2] = k + '1';
-							AIlist = addMove(AIlist, tmp);
+							AIlist = AjouterDeplacement(AIlist, tmp);
 						}
 						if (chb[k][l].occ == true) break;
 						k++;
 						l++;
 					}
 				}
-				if (chb[i][j].current == 'N') {
+				if (chb[i][j].courant == 'N') {
 					int knightrow[] = {i-2,i-2,i-1,i-1,i+1,i+1,i+2,i+2};
 					int knightcol[] = {j-1,j+1,j-2,j+2,j-2,j+2,j-1,j+1};
 					int count = 0;
@@ -131,19 +140,19 @@ PMoveNode *getMoves(PMoveNode *AIlist, templateEchiquier chb[][8])
 								&& knightcol[count] > -1 && knightcol[count] < 8) {
 								tmp[1] = knightcol[count] + 'A';
 								tmp[2] = knightrow[count] + '1';
-								AIlist = addMove(AIlist, tmp);
+								AIlist = AjouterDeplacement(AIlist, tmp);
 							}
 						}
 					}
 				}
-				if (chb[i][j].current == 'R' || chb[i][j].current == 'Q') {
+				if (chb[i][j].courant == 'R' || chb[i][j].courant == 'Q') {
 					k = i;
 					for (l = j+1; l <= 7; l++) {
 						if (chb[k][l].c == chb[i][j].c)
 							break;
 						tmp[1] = chb[k][l].square[0];
 						tmp[2] = chb[k][l].square[1];
-						AIlist = addMove(AIlist, tmp);
+						AIlist = AjouterDeplacement(AIlist, tmp);
 						if (chb[k][l].occ == true)
 							break;
 					}
@@ -152,7 +161,7 @@ PMoveNode *getMoves(PMoveNode *AIlist, templateEchiquier chb[][8])
 							break;
 						tmp[1] = chb[k][l].square[0];
 						tmp[2] = chb[k][l].square[1];
-						AIlist = addMove(AIlist, tmp);
+						AIlist = AjouterDeplacement(AIlist, tmp);
 						if (chb[k][l].occ == true)
 							break;
 					}
@@ -163,7 +172,7 @@ PMoveNode *getMoves(PMoveNode *AIlist, templateEchiquier chb[][8])
 							break;
 						tmp[1] = chb[k][l].square[0];
 						tmp[2] = chb[k][l].square[1];
-						AIlist = addMove(AIlist, tmp);
+						AIlist = AjouterDeplacement(AIlist, tmp);
 						if (chb[k][l].occ == true)
 							break;
 					}
@@ -172,12 +181,12 @@ PMoveNode *getMoves(PMoveNode *AIlist, templateEchiquier chb[][8])
 							break;
 						tmp[1] = chb[k][l].square[0];
 						tmp[2] = chb[k][l].square[1];
-						AIlist = addMove(AIlist, tmp);
+						AIlist = AjouterDeplacement(AIlist, tmp);
 						if (chb[k][l].occ == true)
 							break;
 					}
 				}
-				if (chb[i][j].current == 'K') {
+				if (chb[i][j].courant == 'K') {
 					for (k = i - 1; k < i + 2; k++){
 						for (l = j - 1; l < j + 2; l++){
 							if ((i == k && j == l) || (chb[k][l].c == chb[i][j].c)
@@ -185,15 +194,15 @@ PMoveNode *getMoves(PMoveNode *AIlist, templateEchiquier chb[][8])
 								continue;
 							tmp[1] = chb[k][l].square[0];
 							tmp[2] = chb[k][l].square[1];
-							AIlist = addMove(AIlist, tmp);
+							AIlist = AjouterDeplacement(AIlist, tmp);
 						}
 					}
 				}
 				if (check_castling.KBlack) {
 					if (check_castling.BR_right && !piecesOverlap(chb, 7, ('H'-'A'), 7, 4, 'R'))
-						AIlist = addMove(AIlist, "KG8");
+						AIlist = AjouterDeplacement(AIlist, "KG8");
 					if (check_castling.BR_left && !piecesOverlap(chb, 7, ('A'-'A'), 7, 4, 'R'))
-						AIlist = addMove(AIlist, "KC8");
+						AIlist = AjouterDeplacement(AIlist, "KC8");
 				}
 			}
 		}
@@ -201,18 +210,18 @@ PMoveNode *getMoves(PMoveNode *AIlist, templateEchiquier chb[][8])
 	return AIlist;
 }
 
-char *getRandMove(PMoveNode *head)
+char *getDeplcmtAleatoire(PDeplacementNoeud *racine)
 {
 	char *d = malloc(4);
 	unsigned short t = 1, s;
 	srand(time(NULL));
-	s = rand()%total_moves;
-	while (head!=NULL) {
+	s = rand()%deplcmtTotal;
+	while (racine!=NULL) {
 		if (s == t) {
-			memcpy(d, head->move, 4);
+			memcpy(d, racine->move, 4);
 			break;
 		}
-		head = head->nxt;
+		racine = racine->nxt;
 		t++;
 	}
 	return d;
@@ -220,12 +229,12 @@ char *getRandMove(PMoveNode *head)
 
 char *DeplacementOrdinateur(templateEchiquier chb[][8])
 {
-	PMoveNode *AIl = NULL;
+	PDeplacementNoeud *AIl = NULL;
 	char *valeurDeRetour = malloc(4), *temp = malloc(4);
 
-	total_moves = 0;
-	AIl = getMoves(AIl, chb);
-	memcpy(temp, getRandMove(AIl), 4);
+	deplcmtTotal = 0;
+	AIl = getDeplacements(AIl, chb);
+	memcpy(temp, getDeplcmtAleatoire(AIl), 4);
 	strcpy(valeurDeRetour,temp);
 	free(temp);
 	freeList(AIl);
